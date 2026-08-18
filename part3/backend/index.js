@@ -1,6 +1,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const path = require('path')
 
 const app = express()
 
@@ -13,7 +14,9 @@ morgan.token('body', (request) => {
 })
 
 // Morgan logging
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
+app.use(
+  morgan(':method :url :status :res[content-length] - :response-time ms :body')
+)
 
 let persons = [
   {
@@ -38,12 +41,12 @@ let persons = [
   }
 ]
 
-// 3.1 - Get all persons
+// GET all persons
 app.get('/api/persons', (request, response) => {
   response.json(persons)
 })
 
-// 3.2 - Info page
+// Info page
 app.get('/info', (request, response) => {
   const currentTime = new Date()
 
@@ -53,7 +56,7 @@ app.get('/info', (request, response) => {
   `)
 })
 
-// 3.3 - Get one person
+// GET one person
 app.get('/api/persons/:id', (request, response) => {
   const id = request.params.id
   const person = persons.find(person => person.id === id)
@@ -65,7 +68,7 @@ app.get('/api/persons/:id', (request, response) => {
   }
 })
 
-// 3.4 - Delete one person
+// DELETE one person
 app.delete('/api/persons/:id', (request, response) => {
   const id = request.params.id
 
@@ -74,18 +77,16 @@ app.delete('/api/persons/:id', (request, response) => {
   response.status(204).end()
 })
 
-// 3.5 & 3.6 - Add a new person
+// POST new person
 app.post('/api/persons', (request, response) => {
   const body = request.body
 
-  // Check that name and number exist
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: 'name or number is missing'
     })
   }
 
-  // Check that name is unique
   if (persons.some(person => person.name === body.name)) {
     return response.status(400).json({
       error: 'name must be unique'
@@ -103,7 +104,16 @@ app.post('/api/persons', (request, response) => {
   response.json(person)
 })
 
-const PORT = 3001
+// Serve React frontend from dist
+app.use(express.static(path.join(__dirname, 'dist')))
+
+// Express 5 catch-all route
+app.get('/*splat', (request, response) => {
+  response.sendFile(path.join(__dirname, 'dist', 'index.html'))
+})
+
+// Render provides PORT in production
+const PORT = process.env.PORT || 3001
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
