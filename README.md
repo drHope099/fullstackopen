@@ -30,13 +30,13 @@ A full-stack phonebook application built with React and Node.js/Express.
 
 ## Online Application
 
-[Open the Phonebook application](PASTE-YOUR-RENDER-URL-HERE)
+[Open the Phonebook application](https://phonebook-backend-aedf.onrender.com)
 
 ## Backend API
 
 The phonebook API is available at:
 
-`PASTE-YOUR-RENDER-URL-HERE/api/persons`
+`https://phonebook-backend-aedf.onrender.com`
 
 ## Local Development
 
