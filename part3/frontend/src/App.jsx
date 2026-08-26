@@ -8,9 +8,9 @@ const App = () => {
   const [filter, setFilter] = useState('')
   const [message, setMessage] = useState(null)
 
-  // The backend and frontend are now served from the same address
   const baseUrl = '/api/persons'
 
+  // Get all persons from the backend
   useEffect(() => {
     axios
       .get(baseUrl)
@@ -22,6 +22,7 @@ const App = () => {
       })
   }, [])
 
+  // Add a new person
   const addPerson = event => {
     event.preventDefault()
 
@@ -53,25 +54,28 @@ const App = () => {
       })
   }
 
-  const deletePerson = id => {
-    const person = persons.find(person => person.id === id)
-
-    if (!window.confirm(`Delete ${person.name}?`)) {
-      return
+  // Delete Handler
+  const deletePerson = (id) => {
+    const personToDelete = persons.find(p => (p.id || p._id) === id)
+    
+    if (window.confirm(`Delete ${personToDelete ? personToDelete.name : 'this entry'}?`)) {
+      axios
+        .delete(`${baseUrl}/${id}`)
+        .then(() => {
+          // Filter out the deleted person from local state
+          setPersons(persons.filter(person => (person.id || person._id) !== id))
+          setMessage(`Deleted ${personToDelete ? personToDelete.name : 'entry'}`)
+          setTimeout(() => setMessage(null), 5000)
+        })
+        .catch(error => {
+          console.log('Error deleting person:', error)
+          setMessage('Information has already been removed from server')
+          setTimeout(() => setMessage(null), 5000)
+        })
     }
-
-    axios
-      .delete(`${baseUrl}/${id}`)
-      .then(() => {
-        setPersons(
-          persons.filter(person => person.id !== id)
-        )
-      })
-      .catch(error => {
-        console.log(error)
-      })
   }
 
+  // Filter persons
   const personsToShow = persons.filter(person =>
     person.name.toLowerCase().includes(filter.toLowerCase())
   )
@@ -118,14 +122,20 @@ const App = () => {
 
       <h2>Numbers</h2>
 
-      {personsToShow.map(person => (
-        <div key={person.id}>
-          {person.name} {person.number}{' '}
-          <button onClick={() => deletePerson(person.id)}>
-            delete
-          </button>
-        </div>
-      ))}
+      {personsToShow.map(person => {
+        // Fallback check to support both person._id and person.id
+        const personId = person.id || person._id
+
+        return (
+          <div key={personId}>
+            {person.name} {person.number}{' '}
+
+            <button onClick={() => deletePerson(personId)}>
+              delete
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }

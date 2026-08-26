@@ -2,83 +2,87 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const path = require('path')
+const mongoose = require('mongoose')
+const { MONGODB_URI, PORT } = require('./utils/config')
+const Person = require('./models/person')
 
 const app = express()
 
-app.use(express.json())
+// Connect to MongoDB
+mongoose.set('strictQuery', false)
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('connected to MongoDB')
+  })
+  .catch(error => {
+    console.log('error connecting to MongoDB:', error.message)
+  })
+
 app.use(cors())
+app.use(express.static('dist'))
+app.use(express.json())
 
 // Custom Morgan token for request body
-morgan.token('body', (request) => {
-  return JSON.stringify(request.body)
-})
+morgan.token('body', request => JSON.stringify(request.body))
 
-// Morgan logging
 app.use(
   morgan(':method :url :status :res[content-length] - :response-time ms :body')
 )
 
-let persons = [
-  {
-    id: '1',
-    name: 'Arto Hellas',
-    number: '040-123456'
-  },
-  {
-    id: '2',
-    name: 'Ada Lovelace',
-    number: '39-44-5323523'
-  },
-  {
-    id: '3',
-    name: 'Dan Abramov',
-    number: '12-43-234345'
-  },
-  {
-    id: '4',
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122'
-  }
-]
-
 // GET all persons
-app.get('/api/persons', (request, response) => {
-  response.json(persons)
+app.get('/api/persons', (request, response, next) => {
+  Person.find({})
+    .then(persons => {
+      response.json(persons)
+    })
+    .catch(error => next(error))
 })
 
 // Info page
-app.get('/info', (request, response) => {
+app.get('/info', (request, response, next) => {
   const currentTime = new Date()
 
-  response.send(`
-    <p>Phonebook has info for ${persons.length} people</p>
-    <p>${currentTime}</p>
-  `)
+  Person.countDocuments({})
+    .then(count => {
+      response.send(`
+        <p>Phonebook has info for ${count} people</p>
+        <p>${currentTime}</p>
+      `)
+    })
+    .catch(error => next(error))
 })
 
 // GET one person
-app.get('/api/persons/:id', (request, response) => {
-  const id = request.params.id
-  const person = persons.find(person => person.id === id)
-
-  if (person) {
-    response.json(person)
-  } else {
-    response.status(404).end()
-  }
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then(person => {
+      if (person) {
+        response.json(person)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch(error => next(error))
 })
 
 // DELETE one person
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   const id = request.params.id
 
-  persons = persons.filter(person => person.id !== id)
+  console.log('DELETE ID:', id)
 
-  response.status(204).end()
+  Person.findByIdAndDelete(id)
+    .then(deletedPerson => {
+      if (!deletedPerson) {
+        return response.status(404).json({ error: 'Person not found' })
+      }
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
 
 // POST new person
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (!body.name || !body.number) {
@@ -87,33 +91,37 @@ app.post('/api/persons', (request, response) => {
     })
   }
 
-  if (persons.some(person => person.name === body.name)) {
-    return response.status(400).json({
-      error: 'name must be unique'
-    })
-  }
-
-  const person = {
-    id: Math.floor(Math.random() * 1000000).toString(),
+  const person = new Person({
     name: body.name,
     number: body.number
-  }
+  })
 
-  persons = persons.concat(person)
-
-  response.json(person)
+  person.save()
+    .then(savedPerson => {
+      response.json(savedPerson)
+    })
+    .catch(error => next(error))
 })
 
-// Serve React frontend from dist
-app.use(express.static(path.join(__dirname, 'dist')))
-
-// Express 5 catch-all route
-app.get('/*splat', (request, response) => {
+// Express 5 single-page application fallback route
+app.get('/*path', (request, response) => {
   response.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
-// Render provides PORT in production
-const PORT = process.env.PORT || 3001
+// Error handling middleware
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
