@@ -8,7 +8,8 @@
     "start": "node --watch index.js",
     "dev": "nodemon index.js",
     "test": "node --test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:reset": "node mongoSeed.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
   "type": "commonjs",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
