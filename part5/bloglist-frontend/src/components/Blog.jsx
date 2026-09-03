@@ -30,12 +30,12 @@ const Blog = ({ blog, updateLikes, deleteBlog, currentUser }) => {
       title: blog.title,
       url: blog.url,
     }
-    updateLikes(blog.id, updatedBlog)
+    updateLikes(blog.id || blog._id, updatedBlog)
   }
 
   const handleDelete = () => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)) {
-      deleteBlog(blog.id)
+      deleteBlog(blog.id || blog._id)
     }
   }
 
@@ -47,7 +47,7 @@ const Blog = ({ blog, updateLikes, deleteBlog, currentUser }) => {
     (typeof blog.user === 'string' && blog.user === currentUser?.id)
 
   return (
-    <div style={blogStyle}>
+    <div className="blog" style={blogStyle}>
       <div>
         {blog.title} {blog.author}{' '}
         <button onClick={() => setVisible(!visible)}>

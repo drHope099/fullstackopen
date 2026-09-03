@@ -42,16 +42,17 @@ describe('Blog app', () => {
     })
   })
 
-  // Logged-in state context
+ // Logged-in state context
   describe('When logged in', () => {
     beforeEach(async ({ page }) => {
+      await page.goto('http://localhost:5173')
       await loginWith(page, 'hopechacha59', 'password123')
     })
 
     // 5.19: Blog creation
     test('a new blog can be created', async ({ page }) => {
       await createBlog(page, 'Testing Playwright E2E', 'Hope Chacha', 'https://playwright.dev')
-      await expect(page.getByText('Testing Playwright E2E Hope Chacha')).toBeVisible()
+      await expect(page.getByText('Testing Playwright E2E Hope Chacha').first()).toBeVisible()
     })
 
     // Single blog context
@@ -60,24 +61,26 @@ describe('Blog app', () => {
         await createBlog(page, 'Component vs E2E', 'Hope Chacha', 'https://fullstackopen.com')
       })
 
-      // 5.20: Liking a blog
+      // Liking a blog
       test('a blog can be liked', async ({ page }) => {
-        await page.getByRole('button', { name: 'view' }).click()
-        await page.getByRole('button', { name: 'like' }).click()
-        await expect(page.getByText('likes 1')).toBeVisible()
+        const blog = page.locator('.blog').filter({ hasText: 'Component vs E2E' })
+        await blog.getByRole('button', { name: 'view' }).click()
+        await blog.getByRole('button', { name: 'like' }).click()
+        await expect(blog.getByText('likes 1').first()).toBeVisible()
       })
 
-      // 5.21: Creator can delete blog
+      // Creator can delete blog
       test('the user who created the blog can delete it', async ({ page }) => {
-        await page.getByRole('button', { name: 'view' }).click()
+        const blog = page.locator('.blog').filter({ hasText: 'Component vs E2E' })
+        await blog.getByRole('button', { name: 'view' }).click()
 
         page.on('dialog', dialog => dialog.accept())
-        await page.getByRole('button', { name: 'remove' }).click()
+        await blog.getByRole('button', { name: 'remove' }).click()
 
-        await expect(page.getByText('Component vs E2E Hope Chacha')).not.toBeVisible()
+        await expect(page.getByText('Component vs E2E Hope Chacha').first()).not.toBeVisible()
       })
 
-      // 5.22: Delete button visibility for non-creator
+      // Delete button visibility for non-creator
       test('only the creator sees the delete button', async ({ page, request }) => {
         // Create second user
         await request.post('http://localhost:3003/api/users', {
@@ -94,12 +97,13 @@ describe('Blog app', () => {
         // Log in as second user
         await loginWith(page, 'seconduser', 'password123')
 
-        await page.getByRole('button', { name: 'view' }).click()
-        await expect(page.getByRole('button', { name: 'remove' })).not.toBeVisible()
+        const blog = page.locator('.blog').filter({ hasText: 'Component vs E2E' })
+        await blog.getByRole('button', { name: 'view' }).click()
+        await expect(blog.getByRole('button', { name: 'remove' })).not.toBeVisible()
       })
     })
 
-    // 5.23: Blogs ordering by likes
+    // Blogs ordering by likes
     describe('and multiple blogs exist', () => {
       beforeEach(async ({ page }) => {
         await createBlog(page, 'First Blog Title', 'Hope Chacha', 'https://link1.com')

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
+import LoginForm from './components/loginForm'
 import Togglable from './components/Togglable'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
@@ -58,7 +59,6 @@ const App = () => {
 
   const addBlog = async (blogObject) => {
     try {
-      // Safe check for ref execution
       blogFormRef.current?.toggleVisibility()
       const returnedBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat({ ...returnedBlog, user: user }))
@@ -99,26 +99,15 @@ const App = () => {
   if (user === null) {
     return (
       <div>
-        <h2>Log in to application</h2>
+        <h2>log in to application</h2>
         <Notification message={notification.message} type={notification.type} />
-        <form onSubmit={handleLogin}>
-          <div>
-            username
-            <input
-              value={username}
-              onChange={({ target }) => setUsername(target.value)}
-            />
-          </div>
-          <div>
-            password
-            <input
-              type="password"
-              value={password}
-              onChange={({ target }) => setPassword(target.value)}
-            />
-          </div>
-          <button type="submit">login</button>
-        </form>
+        <LoginForm
+          handleLogin={handleLogin}
+          username={username}
+          password={password}
+          setUsername={setUsername}
+          setPassword={setPassword}
+        />
       </div>
     )
   }

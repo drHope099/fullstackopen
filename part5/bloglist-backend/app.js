@@ -17,11 +17,13 @@ app.use('/api/login', loginRouter)
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 
-
-// Testing Reset Route (Only active in test mode or dev)
+// Testing Reset Route (Only active in test mode)
 if (process.env.NODE_ENV === 'test') {
   const testingRouter = require('./controllers/testing')
   app.use('/api/testing', testingRouter)
 }
+
+// Error Handling Middleware (MUST be loaded last)
+app.use(middleware.errorHandler)
 
 module.exports = app
