@@ -1,0 +1,33 @@
+{
+  "anecdotes": [
+    {
+      "content": "hope is the gentleman",
+      "author": "hope",
+      "info": "www",
+      "votes": 0,
+      "id": "NKTnMKeDkZc"
+    },
+    {
+      "content": "hope is the good guy",
+      "author": "hope",
+      "info": "www",
+      "votes": 0,
+      "id": "Gu9gJy_SYaQ"
+    },
+    {
+      "content": "an anecdote created by playwright 1790077041479",
+      "author": "Playwright",
+      "info": "https://playwright.dev",
+      "votes": 0,
+      "id": "HuzIov9ovcc"
+    },
+    {
+      "content": "an anecdote created by playwright 1790077846531",
+      "author": "Playwright",
+      "info": "https://playwright.dev",
+      "votes": 0,
+      "id": "mfK9aZrWHZs"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
